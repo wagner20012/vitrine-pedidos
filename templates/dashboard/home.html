@@ -1,0 +1,82 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Painel — {{ store.store_name }}{% endblock %}
+{% block dashboard_content %}
+<h1 class="font-display text-2xl mb-6">Visão geral</h1>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Pedidos hoje</p>
+    <p class="text-2xl font-semibold">{{ orders_today }}</p>
+    <p class="text-xs text-stone-400 mt-1">{{ orders_pending }} pendentes de contato</p>
+  </div>
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Vendas hoje</p>
+    <p class="text-2xl font-semibold text-primary">R$ {{ sales_today }}</p>
+    <p class="text-xs text-stone-400 mt-1">7 dias: R$ {{ sales_7d }} · 30 dias: R$ {{ sales_30d }}</p>
+  </div>
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Aguardando pagamento</p>
+    <p class="text-2xl font-semibold">{{ orders_awaiting_payment }}</p>
+    <p class="text-xs text-stone-400 mt-1">{{ orders_paid }} pagos · {{ orders_cancelled }} cancelados</p>
+  </div>
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Estoque</p>
+    <p class="text-2xl font-semibold text-accent">{{ stock_out }}</p>
+    <p class="text-xs text-stone-400 mt-1">{{ stock_low }} com estoque baixo · {{ backorder_count }} sob encomenda</p>
+  </div>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 bg-white border border-stone-200 rounded-2xl p-5">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="font-display text-lg">Pedidos recentes</h2>
+      <a href="{% url 'dashboard:order_list' %}" class="text-xs text-primary hover:underline">Ver todos</a>
+    </div>
+    {% if recent_orders %}
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-xs text-stone-400 uppercase">
+        <th class="pb-2">Número</th><th class="pb-2">Cliente</th><th class="pb-2">Total</th><th class="pb-2">Status</th>
+      </tr></thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr class="border-t border-stone-100 hover:bg-stone-50">
+          <td class="py-2"><a href="{% url 'dashboard:order_detail' order.pk %}" class="text-primary hover:underline">{{ order.number }}</a></td>
+          <td class="py-2">{{ order.customer_name }}</td>
+          <td class="py-2">R$ {{ order.total }}</td>
+          <td class="py-2">{{ order.get_status_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-stone-400 text-sm">Nenhum pedido ainda.</p>{% endif %}
+  </div>
+
+  <div class="space-y-6">
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <h2 class="font-display text-lg mb-3">Produtos</h2>
+      <p class="text-sm text-stone-500">{{ products_total }} no total · {{ products_active }} ativos · {{ products_inactive }} inativos</p>
+      <p class="text-sm text-stone-500 mt-1">{{ products_promo }} em promoção</p>
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <h2 class="font-display text-lg mb-3">Atenção: estoque</h2>
+      {% if low_stock_products %}
+      <ul class="text-sm space-y-1.5">
+        {% for product in low_stock_products %}
+        <li class="flex justify-between"><span class="truncate mr-2">{{ product.name }}</span><span class="{% if product.stock <= 0 %}text-red-600 font-medium{% else %}text-amber-600{% endif %}">{{ product.stock }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="text-stone-400 text-sm">Estoque saudável.</p>{% endif %}
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <h2 class="font-display text-lg mb-3">Últimas ações</h2>
+      {% if audit_entries %}
+      <ul class="text-xs text-stone-500 space-y-2">
+        {% for entry in audit_entries %}
+        <li><span class="font-medium text-stone-700">{{ entry.action }}</span> — {{ entry.created_at|date:"d/m H:i" }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="text-stone-400 text-sm">Sem registros.</p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — {{ store.store_name }}{% endblock %}
+{% block meta_description %}{{ product.short_description }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <nav class="text-xs text-stone-400 mb-6" aria-label="Trilha de navegação">
+    <a href="{% url 'catalog:home' %}" class="hover:text-primary">Início</a> ›
+    <a href="{% url 'catalog:product_list' %}?categoria={{ product.category.slug }}" class="hover:text-primary">{{ product.category.name }}</a> ›
+    <span class="text-stone-500">{{ product.name }}</span>
+  </nav>
+
+  <div class="grid md:grid-cols-2 gap-10">
+    <div>
+      {% with image=product.images.first %}
+        <div class="rounded-3xl overflow-hidden bg-stone-100 aspect-square">
+          {% if image %}
+            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" id="main-image" class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-stone-300 font-display text-8xl">{{ product.name.0|upper }}</div>
+          {% endif %}
+        </div>
+      {% endwith %}
+      {% if product.images.count > 1 %}
+      <div class="flex gap-3 mt-4 overflow-x-auto pb-1" role="list" aria-label="Galeria de imagens">
+        {% for img in product.images.all %}
+          <button type="button" data-full="{{ img.image.url }}" class="gallery-thumb shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 {% if img.is_primary %}border-primary{% else %}border-transparent{% endif %} bg-stone-100" aria-label="Ver imagem {{ forloop.counter }}">
+            <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" loading="lazy" class="w-full h-full object-cover">
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <p class="text-xs text-stone-400 uppercase tracking-wide mb-2">{{ product.category.name }}</p>
+      <h1 class="font-display text-3xl md:text-4xl mb-3">{{ product.name }}</h1>
+      {% if product.short_description %}<p class="text-stone-500 mb-6">{{ product.short_description }}</p>{% endif %}
+
+      <div class="flex items-end gap-3 mb-2">
+        {% if product.has_discount %}
+          <span class="text-stone-400 line-through">R$ {{ product.price }}</span>
+          <span class="bg-accent/10 text-accent text-xs font-semibold px-2 py-0.5 rounded-full">
+            {% if product.discount_type == 'percent' %}{{ product.discount_value|floatformat:0 }}% OFF{% else %}Economia de R$ {{ product.discount_amount }}{% endif %}
+          </span>
+        {% endif %}
+      </div>
+      <p class="text-3xl font-semibold text-primary mb-6">R$ {{ product.final_price }}</p>
+
+      {% if product.status == 'in_stock' %}
+        <p class="text-emerald-600 text-sm mb-6">✓ Disponível para compra imediata</p>
+      {% elif product.status == 'low_stock' %}
+        <p class="text-amber-600 text-sm mb-6">⚠ Últimas unidades — compre logo</p>
+      {% elif product.status == 'backorder' %}
+        <p class="text-sky-600 text-sm mb-6">Disponível sob encomenda — faça seu pedido</p>
+      {% else %}
+        <p class="text-stone-400 text-sm mb-6">Fora de estoque</p>
+      {% endif %}
+
+      {% if product.status != 'out_of_stock' %}
+      <form action="{% url 'cart:add' product.pk %}" method="post" class="flex gap-3 items-stretch max-w-sm">
+        {% csrf_token %}
+        <label for="quantity" class="sr-only">Quantidade</label>
+        <input type="number" id="quantity" name="quantity" value="1" min="1" max="99"
+               class="w-20 text-center border border-stone-200 rounded-xl px-2">
+        <button type="submit" class="flex-1 bg-primary text-white font-medium rounded-xl py-3 hover:opacity-90 transition-opacity">
+          Adicionar ao carrinho
+        </button>
+      </form>
+      {% endif %}
+
+      {% if product.description %}
+      <div class="mt-10 border-t border-stone-200 pt-6">
+        <h2 class="font-display text-xl mb-3">Sobre o produto</h2>
+        <div class="text-stone-600 leading-relaxed whitespace-pre-line">{{ product.description }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if related_products %}
+  <section class="mt-16" aria-label="Produtos relacionados">
+    <h2 class="font-display text-2xl mb-6">Você também pode gostar</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      {% for product in related_products %}
+        {% include "catalog/_product_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

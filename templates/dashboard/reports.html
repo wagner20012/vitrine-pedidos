@@ -1,0 +1,73 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Relatórios — Painel{% endblock %}
+{% block dashboard_content %}
+<h1 class="font-display text-2xl mb-6">Relatórios</h1>
+
+<form method="get" class="flex flex-wrap gap-2 mb-8 items-center text-sm">
+  <select name="periodo" class="input !w-44">
+    <option value="hoje" {% if request.GET.periodo == 'hoje' %}selected{% endif %}>Hoje</option>
+    <option value="7" {% if request.GET.periodo == '7' %}selected{% endif %}>Últimos 7 dias</option>
+    <option value="30" {% if not request.GET.periodo or request.GET.periodo == '30' %}selected{% endif %}>Últimos 30 dias</option>
+    <option value="mes" {% if request.GET.periodo == 'mes' %}selected{% endif %}>Este mês</option>
+    <option value="custom" {% if request.GET.periodo == 'custom' %}selected{% endif %}>Período personalizado</option>
+  </select>
+  <input type="date" name="inicio" value="{{ request.GET.inicio|default:'' }}" class="input !w-40">
+  <input type="date" name="fim" value="{{ request.GET.fim|default:'' }}" class="input !w-40">
+  <button type="submit" class="bg-primary text-white px-5 py-2.5 rounded-full hover:opacity-90">Aplicar</button>
+</form>
+
+<div class="grid grid-cols-2 gap-4 mb-8 max-w-md">
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Pedidos no período</p>
+    <p class="text-2xl font-semibold">{{ orders_count }}</p>
+  </div>
+  <div class="bg-white border border-stone-200 rounded-2xl p-5">
+    <p class="text-xs uppercase tracking-wide text-stone-400 mb-1">Faturamento (pago+)</p>
+    <p class="text-2xl font-semibold text-primary">R$ {{ revenue_total }}</p>
+  </div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+  <div class="bg-white border border-stone-200 rounded-2xl p-6">
+    <h2 class="font-display text-lg mb-4">Vendas por dia</h2>
+    {% if sales_by_day %}
+    <div class="flex items-end gap-1 h-40" role="img" aria-label="Gráfico de vendas por dia">
+      {% for row in sales_by_day %}
+      <div class="flex-1 flex flex-col items-center justify-end h-full" title="{{ row.created_at__date|date:'d/m' }}: R$ {{ row.total }} ({{ row.count }} pedidos)">
+        <div class="w-full bg-primary/80 rounded-t" style="height: {% widthratio row.total max_day 100 %}%"></div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="text-xs text-stone-400 mt-3">{{ sales_by_day|length }} dia(s) com vendas no período</p>
+    {% else %}<p class="text-stone-400 text-sm">Sem vendas pagas no período.</p>{% endif %}
+  </div>
+
+  <div class="bg-white border border-stone-200 rounded-2xl p-6">
+    <h2 class="font-display text-lg mb-4">Produtos mais vendidos</h2>
+    {% if top_products %}
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-xs text-stone-400 uppercase"><th class="pb-2">Produto</th><th class="pb-2">Qtd</th><th class="pb-2 text-right">Faturamento</th></tr></thead>
+      <tbody>
+        {% for row in top_products %}
+        <tr class="border-t border-stone-100"><td class="py-2">{{ row.product_name }}</td><td class="py-2">{{ row.quantity }}</td><td class="py-2 text-right">R$ {{ row.revenue }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-stone-400 text-sm">Sem dados no período.</p>{% endif %}
+  </div>
+
+  <div class="bg-white border border-stone-200 rounded-2xl p-6">
+    <h2 class="font-display text-lg mb-4">Categorias mais vendidas</h2>
+    {% if top_categories %}
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-xs text-stone-400 uppercase"><th class="pb-2">Categoria</th><th class="pb-2">Qtd</th><th class="pb-2 text-right">Faturamento</th></tr></thead>
+      <tbody>
+        {% for row in top_categories %}
+        <tr class="border-t border-stone-100"><td class="py-2">{{ row.product__category__name|default:"—" }}</td><td class="py-2">{{ row.quantity }}</td><td class="py-2 text-right">R$ {{ row.revenue }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-stone-400 text-sm">Sem dados no período.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

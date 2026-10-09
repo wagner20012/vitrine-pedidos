@@ -1,0 +1,89 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load store_extras %}
+{% block title %}{{ order.number }} — Painel{% endblock %}
+{% block dashboard_content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="font-display text-2xl">{{ order.number }}</h1>
+    <p class="text-sm text-stone-400">Criado em {{ order.created_at|date:"d/m/Y \à\s H:i" }} · {{ order.get_status_display }}</p>
+  </div>
+  <a href="{% url 'dashboard:order_list' %}" class="text-sm text-primary hover:underline">← Voltar</a>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-white border border-stone-200 rounded-2xl p-6">
+      <h2 class="font-display text-lg mb-4">Itens (valores registrados na compra)</h2>
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs text-stone-400 uppercase">
+          <th class="pb-2">Produto</th><th class="pb-2">Qtd</th><th class="pb-2">Unit. tabela</th>
+          <th class="pb-2">Desconto</th><th class="pb-2">Unit. final</th><th class="pb-2 text-right">Subtotal</th>
+        </tr></thead>
+        <tbody>
+          {% for item in order.items.all %}
+          <tr class="border-t border-stone-100">
+            <td class="py-2">{{ item.product_name }}</td>
+            <td class="py-2">{{ item.quantity }}</td>
+            <td class="py-2">R$ {{ item.unit_price }}</td>
+            <td class="py-2 text-accent">−R$ {{ item.discount_value }}</td>
+            <td class="py-2">R$ {{ item.unit_final_price }}</td>
+            <td class="py-2 text-right font-medium">R$ {{ item.subtotal }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="border-t border-stone-100 mt-4 pt-3 text-sm space-y-1 max-w-xs ml-auto">
+        <div class="flex justify-between text-stone-500"><span>Subtotal</span><span>R$ {{ order.subtotal }}</span></div>
+        <div class="flex justify-between text-accent"><span>Desconto</span><span>−R$ {{ order.discount_total }}</span></div>
+        <div class="flex justify-between font-semibold text-base"><span>Total</span><span>R$ {{ order.total }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-6">
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 text-sm space-y-2">
+      <h2 class="font-display text-lg mb-2">Cliente</h2>
+      <p><strong>{{ order.customer_name }}</strong></p>
+      <p class="text-stone-500">{{ order.customer_phone }}</p>
+      {% if order.note %}<p class="text-stone-500 mt-2 border-t border-stone-100 pt-2"><em>“{{ order.note }}”</em></p>{% endif %}
+      <p class="text-stone-500 border-t border-stone-100 pt-2">Pagamento: {{ order.payment_method_name|default:"—" }}</p>
+    </div>
+
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 text-sm">
+      <h2 class="font-display text-lg mb-3">Alterar status</h2>
+      {% if allowed_transitions %}
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="change_status">
+        <select name="new_status" class="input">
+          {% for s in allowed_transitions %}
+            <option value="{{ s }}">{{ status_labels|get_item:s }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="w-full bg-primary text-white rounded-full py-2 hover:opacity-90">Atualizar</button>
+      </form>
+      {% else %}
+      <p class="text-stone-400">Este pedido não aceita mais transições de status.</p>
+      {% endif %}
+    </div>
+
+    {% if order.status != 'cancelado' and order.status != 'entregue' %}
+    <div class="bg-white border border-red-100 rounded-2xl p-6 text-sm">
+      <h2 class="font-display text-lg mb-3 text-red-700">Cancelar pedido</h2>
+      <form method="post" class="space-y-3" onsubmit="return confirm('Confirma o cancelamento? O estoque será devolvido.')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <textarea name="reason" rows="2" placeholder="Motivo do cancelamento" class="input"></textarea>
+        <button type="submit" class="w-full border border-red-200 text-red-600 rounded-full py-2 hover:bg-red-50">Cancelar pedido</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 text-sm text-stone-500">
+      {% if order.cancelled_at %}<p><strong>Cancelado em</strong> {{ order.cancelled_at|date:"d/m/Y H:i" }}</p>{% endif %}
+      {% if order.cancellation_reason %}<p class="mt-1"><strong>Motivo:</strong> {{ order.cancellation_reason }}</p>{% endif %}
+      {% if order.cancelled_by %}<p class="mt-1"><strong>Por:</strong> {{ order.cancelled_by.username }}</p>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

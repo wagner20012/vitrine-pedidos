@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Produtos — {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <header class="mb-6">
+    <h1 class="font-display text-3xl">
+      {% if request.GET.categoria %}{{ active_category.name|default:"Categoria" }}{% elif request.GET.q %}Resultados para “{{ request.GET.q }}”{% else %}Todos os produtos{% endif %}
+    </h1>
+    <p class="text-stone-400 text-sm mt-1">{{ paginator.count }} produto(s) encontrado(s)</p>
+  </header>
+
+  <div class="flex flex-col lg:flex-row gap-8">
+    <aside class="lg:w-56 shrink-0" aria-label="Filtros">
+      <form method="get" action="{% url 'catalog:product_list' %}" class="bg-white border border-stone-200 rounded-2xl p-5 space-y-4 text-sm">
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+        <div>
+          <label for="categoria" class="block text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Categoria</label>
+          <select name="categoria" id="categoria" class="w-full border-stone-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">Todas</option>
+            {% for category in categories %}
+              <option value="{{ category.slug }}" {% if request.GET.categoria == category.slug %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Faixa de preço (R$)</label>
+          <div class="flex gap-2">
+            <input type="number" step="0.01" min="0" name="preco_min" value="{{ request.GET.preco_min|default:'' }}" placeholder="mín" class="w-full border border-stone-200 rounded-lg px-2 py-1.5" aria-label="Preço mínimo">
+            <input type="number" step="0.01" min="0" name="preco_max" value="{{ request.GET.preco_max|default:'' }}" placeholder="máx" class="w-full border border-stone-200 rounded-lg px-2 py-1.5" aria-label="Preço máximo">
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2"><input type="checkbox" name="promocao" value="1" {% if request.GET.promocao %}checked{% endif %} class="accent-primary"> Em promoção</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="destaque" value="1" {% if request.GET.destaque %}checked{% endif %} class="accent-primary"> Em destaque</label>
+        </div>
+        <div>
+          <label for="disponibilidade" class="block text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Disponibilidade</label>
+          <select name="disponibilidade" id="disponibilidade" class="w-full border-stone-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">Todas</option>
+            <option value="disponivel" {% if request.GET.disponibilidade == 'disponivel' %}selected{% endif %}>Disponíveis</option>
+            <option value="sob_encomenda" {% if request.GET.disponibilidade == 'sob_encomenda' %}selected{% endif %}>Sob encomenda</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-primary text-white rounded-full py-2 hover:opacity-90 transition-opacity">Aplicar filtros</button>
+        <a href="{% url 'catalog:product_list' %}" class="block text-center text-stone-400 hover:text-primary text-xs">Limpar filtros</a>
+      </form>
+    </aside>
+
+    <div class="flex-1">
+      <form method="get" class="mb-4 flex items-center gap-2 text-sm" aria-label="Ordenação">
+        {% for key, value in request.GET.items %}{% if key != 'ordenar' and key != 'page' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+        <label for="ordenar" class="text-stone-400">Ordenar por:</label>
+        <select name="ordenar" id="ordenar" class="border-stone-200 rounded-lg px-2 py-1.5 bg-white" onchange="this.form.submit()">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}" {% if request.GET.ordenar == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      {% if products %}
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        {% for product in products %}
+          {% include "catalog/_product_card.html" %}
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+      <nav class="flex justify-center gap-2 mt-10" aria-label="Paginação">
+        {% if page_obj.has_previous %}
+          <a href="?{{ current_params.urlencode }}&page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border border-stone-200 rounded-full text-sm hover:border-primary">← Anterior</a>
+        {% endif %}
+        <span class="px-4 py-2 text-sm text-stone-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{{ current_params.urlencode }}&page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border border-stone-200 rounded-full text-sm hover:border-primary">Próxima →</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+      {% else %}
+      <div class="bg-white border border-stone-200 rounded-2xl p-12 text-center">
+        <p class="font-display text-xl mb-2">Nenhum produto encontrado</p>
+        <p class="text-stone-400 text-sm">Tente ajustar a busca ou os filtros.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

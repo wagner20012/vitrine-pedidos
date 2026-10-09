@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Carrinho — {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h1 class="font-display text-3xl mb-8">Seu carrinho</h1>
+
+  {% if cart.is_empty %}
+    <div class="bg-white border border-stone-200 rounded-3xl p-12 text-center">
+      <p class="font-display text-xl mb-2">Seu carrinho está vazio</p>
+      <p class="text-stone-400 text-sm mb-6">Explore nosso catálogo e encontre produtos incríveis.</p>
+      <a href="{% url 'catalog:product_list' %}" class="inline-block bg-primary text-white px-6 py-2.5 rounded-full text-sm hover:opacity-90">Ver produtos</a>
+    </div>
+  {% else %}
+    <div class="bg-white border border-stone-200 rounded-3xl divide-y divide-stone-100">
+      {% for line in cart.lines %}
+      <div class="p-5 flex gap-4 items-center">
+        <div class="w-20 h-20 rounded-xl overflow-hidden bg-stone-100 shrink-0">
+          {% if line.product.images.first %}
+            <img src="{{ line.product.images.first.image.url }}" alt="{{ line.product.name }}" loading="lazy" class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-stone-300 font-display text-2xl">{{ line.product.name.0|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <a href="{{ line.product.get_absolute_url }}" class="font-medium hover:text-primary line-clamp-1">{{ line.product.name }}</a>
+          <p class="text-sm text-stone-400">
+            R$ {{ line.unit_final_price }} cada
+            {% if line.unit_discount > 0 %}<span class="ml-1 text-accent">(−R$ {{ line.unit_discount }})</span>{% endif %}
+          </p>
+          <div class="flex items-center gap-3 mt-2">
+            <form action="{% url 'cart:update' line.product.pk %}" method="post" class="flex items-center gap-1 js-qty-form">
+              {% csrf_token %}
+              <button type="submit" name="quantity" value="{{ line.quantity|add:'-1' }}" class="w-7 h-7 rounded-full border border-stone-200 hover:border-primary" aria-label="Diminuir quantidade">−</button>
+              <span class="w-8 text-center text-sm font-medium">{{ line.quantity }}</span>
+              <button type="submit" name="quantity" value="{{ line.quantity|add:'1' }}" class="w-7 h-7 rounded-full border border-stone-200 hover:border-primary" aria-label="Aumentar quantidade">+</button>
+            </form>
+            <form action="{% url 'cart:remove' line.product.pk %}" method="post" class="ml-2">
+              {% csrf_token %}
+              <button type="submit" class="text-xs text-stone-400 hover:text-red-600" aria-label="Remover {{ line.product.name }}">Remover</button>
+            </form>
+          </div>
+        </div>
+        <p class="font-semibold text-right shrink-0">R$ {{ line.subtotal }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="flex flex-col md:flex-row justify-between gap-6 mt-8">
+      <div class="flex gap-3">
+        <a href="{% url 'catalog:product_list' %}" class="border border-stone-200 px-5 py-2.5 rounded-full text-sm hover:border-primary">Continuar comprando</a>
+        <form action="{% url 'cart:clear' %}" method="post" onsubmit="return confirm('Esvaziar o carrinho?')">
+          {% csrf_token %}
+          <button type="submit" class="text-sm text-stone-400 hover:text-red-600 px-3">Esvaziar carrinho</button>
+        </form>
+      </div>
+      <div class="bg-white border border-stone-200 rounded-3xl p-6 md:w-80 space-y-2 text-sm">
+        <div class="flex justify-between text-stone-500">
+          <span>Subtotal</span><span>R$ {{ cart.subtotal }}</span>
+        </div>
+        <div class="flex justify-between text-accent">
+          <span>Desconto</span><span>−R$ {{ cart.discount_total }}</span>
+        </div>
+        <div class="flex justify-between font-semibold text-lg text-stone-800 border-t border-stone-100 pt-2 mt-1">
+          <span>Total</span><span>R$ {{ cart.total }}</span>
+        </div>
+        <a href="{% url 'orders:checkout' %}" class="block text-center bg-primary text-white rounded-full py-3 mt-4 hover:opacity-90 transition-opacity font-medium">
+          Finalizar pedido
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if banners %}
+<section class="relative" aria-label="Destaques">
+  <div class="max-w-6xl mx-auto px-4 pt-6">
+    <div class="relative rounded-3xl overflow-hidden shadow-sm">
+      <img src="{{ banners.0.image.url }}" alt="{{ banners.0.title }}" class="w-full h-64 md:h-96 object-cover" fetchpriority="high">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 p-6 md:p-12 text-white max-w-xl">
+        <h1 class="font-display text-2xl md:text-4xl mb-2">{{ banners.0.title }}</h1>
+        {% if banners.0.subtitle %}<p class="text-sm md:text-lg opacity-90 mb-4">{{ banners.0.subtitle }}</p>{% endif %}
+        {% if banners.0.button_text and banners.0.link %}
+          <a href="{{ banners.0.link }}" class="inline-block bg-white text-stone-900 text-sm font-medium px-6 py-2.5 rounded-full hover:bg-primary hover:text-white transition-colors">{{ banners.0.button_text }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="max-w-6xl mx-auto px-4 py-10" aria-label="Categorias">
+  <h2 class="font-display text-2xl mb-6 text-center">Navegue por categoria</h2>
+  <div class="flex flex-wrap justify-center gap-3">
+    {% for category in categories %}
+      <a href="{% url 'catalog:product_list' %}?categoria={{ category.slug }}"
+         class="px-5 py-2.5 bg-white border border-stone-200 rounded-full text-sm text-stone-700 hover:border-primary hover:text-primary transition-colors">
+        {{ category.name }}
+      </a>
+    {% empty %}
+      <p class="text-stone-400 text-sm">Nenhuma categoria cadastrada ainda.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% if featured_products %}
+<section class="max-w-6xl mx-auto px-4 pb-4" aria-label="Produtos em destaque">
+  <h2 class="font-display text-2xl mb-6">Destaques</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+    {% for product in featured_products %}
+      {% include "catalog/_product_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if promo_products %}
+<section class="max-w-6xl mx-auto px-4 py-10" aria-label="Promoções">
+  <h2 class="font-display text-2xl mb-6">Promoções</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+    {% for product in promo_products %}
+      {% include "catalog/_product_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if store.service_message %}
+<section class="max-w-6xl mx-auto px-4 pb-10">
+  <div class="bg-white border border-stone-200 rounded-3xl p-8 text-center">
+    <p class="font-display text-xl text-primary mb-2">Atendimento personalizado</p>
+    <p class="text-stone-500 max-w-2xl mx-auto">{{ store.service_message }}</p>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

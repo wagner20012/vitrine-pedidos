@@ -1,0 +1,6 @@
+Django>=5.0,<6.0
+Pillow>=10.0
+whitenoise>=6.6
+python-dotenv>=1.0
+psycopg2-binary>=2.9  # necessário apenas em produção (PostgreSQL)
+gunicorn>=22.0,<24.0  # servidor WSGI para hospedagem Linux

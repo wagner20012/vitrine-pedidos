@@ -1,0 +1,60 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Desconto em massa — Painel{% endblock %}
+{% block dashboard_content %}
+<h1 class="font-display text-2xl mb-2">Desconto em massa</h1>
+<p class="text-stone-400 text-sm mb-8">Selecione o escopo e a ação. Sempre haverá uma confirmação antes de aplicar.</p>
+
+{% if step == 'form' or step == 'execute' %}
+<form method="post" class="bg-white border border-stone-200 rounded-2xl p-6 max-w-xl space-y-5">
+  {% csrf_token %}
+  <input type="hidden" name="step" value="preview">
+  <div>
+    <label for="category" class="block text-sm font-medium mb-1.5">Categoria</label>
+    <select name="category" id="category" class="input">
+      <option value="">Todas as categorias</option>
+      {% for category in categories %}
+        <option value="{{ category.pk }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="only_promo" value="1" class="accent-primary"> Apenas produtos em promoção</label>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="only_featured" value="1" class="accent-primary"> Apenas produtos em destaque</label>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="only_inactive" value="1" class="accent-primary"> Apenas produtos inativos</label>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label for="action_type" class="block text-sm font-medium mb-1.5">Ação</label>
+      <select name="action_type" id="action_type" class="input">
+        <option value="percent">Percentual (%)</option>
+        <option value="fixed">Valor fixo (R$)</option>
+        <option value="remove">Remover desconto</option>
+      </select>
+    </div>
+    <div>
+      <label for="value" class="block text-sm font-medium mb-1.5">Valor</label>
+      <input type="text" name="value" id="value" placeholder="Ex.: 15 ou 20.00" class="input">
+    </div>
+  </div>
+  <button type="submit" class="w-full bg-primary text-white rounded-full py-2.5 hover:opacity-90">Revisar e confirmar</button>
+</form>
+
+{% elif step == 'preview' %}
+<div class="bg-white border border-stone-200 rounded-2xl p-6 max-w-xl">
+  <h2 class="font-display text-lg mb-4">Confirmar aplicação</h2>
+  <p class="text-sm text-stone-600 mb-6">
+    A ação será aplicada a <strong>{{ product_count }} produto(s)</strong>.
+    {% if action_type == 'percent' %}Desconto de <strong>{{ value }}%</strong> no preço.{% elif action_type == 'fixed' %}Desconto fixo de <strong>R$ {{ value }}</strong>.{% else %}Todos os descontos serão <strong>removidos</strong>.{% endif %}
+  </p>
+  <form method="post" class="flex gap-3">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="execute">
+    <input type="hidden" name="product_ids" value="{{ product_ids }}">
+    <input type="hidden" name="action_type" value="{{ action_type }}">
+    <input type="hidden" name="value" value="{{ value }}">
+    <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-full text-sm hover:opacity-90">Confirmar</button>
+    <a href="{% url 'dashboard:mass_discount' %}" class="border border-stone-200 px-6 py-2.5 rounded-full text-sm hover:border-stone-400">Cancelar</a>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

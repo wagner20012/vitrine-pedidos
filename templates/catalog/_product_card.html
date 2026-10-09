@@ -1,0 +1,37 @@
+{% load store_extras %}
+<article class="group bg-white rounded-2xl overflow-hidden border border-stone-100 hover:shadow-md transition-shadow flex flex-col">
+  <a href="{{ product.get_absolute_url }}" class="block relative aspect-square bg-stone-100 overflow-hidden">
+    {% with image=product.images.first %}
+      {% if image %}
+        <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" loading="lazy" decoding="async"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center text-stone-300 font-display text-5xl">{{ product.name.0|upper }}</div>
+      {% endif %}
+    {% endwith %}
+    {% if product.has_discount %}
+      <span class="absolute top-3 left-3 bg-accent text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+        {% if product.discount_type == 'percent' %}-{{ product.discount_value|floatformat:0 }}%{% else %}Promoção{% endif %}
+      </span>
+    {% endif %}
+  </a>
+  <div class="p-4 flex flex-col gap-1.5 flex-1">
+    <p class="text-xs text-stone-400 uppercase tracking-wide">{{ product.category.name }}</p>
+    <a href="{{ product.get_absolute_url }}" class="font-medium text-stone-800 group-hover:text-primary transition-colors line-clamp-2">{{ product.name }}</a>
+    <div class="mt-auto pt-2">
+      {% if product.has_discount %}
+        <p class="text-xs text-stone-400 line-through">R$ {{ product.price }}</p>
+      {% endif %}
+      <p class="text-lg font-semibold text-primary">R$ {{ product.final_price }}</p>
+      {% if product.status %}
+        {% if product.status == 'in_stock' or product.status == 'low_stock' %}
+          <p class="text-xs {% if product.status == 'low_stock' %}text-amber-600{% else %}text-emerald-600{% endif %} mt-1">✓ Disponível{% if product.status == 'low_stock' %} — estoque baixo{% endif %}</p>
+        {% elif product.status == 'backorder' %}
+          <p class="text-xs text-sky-600 mt-1">Sob encomenda</p>
+        {% else %}
+          <p class="text-xs text-stone-400 mt-1">Fora de estoque</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</article>

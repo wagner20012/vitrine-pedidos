@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidade — {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12">
+  <h1 class="font-display text-3xl mb-6">Política de Privacidade</h1>
+  <div class="bg-white border border-stone-200 rounded-3xl p-8 space-y-4 text-sm text-stone-600 leading-relaxed">
+    <p>Sua privacidade é importante para nós. Esta loja coleta <strong>apenas os dados necessários</strong> para processar seu pedido:</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Nome — para identificar seu pedido;</li>
+      <li>Telefone/WhatsApp — para confirmar e combinar a entrega;</li>
+      <li>Observações que você escrever no pedido;</li>
+      <li>Produtos, quantidades e valores do pedido.</li>
+    </ul>
+    <p>Não solicitamos cadastro, CPF nem dados de pagamento na plataforma. Não compartilhamos seus dados com terceiros, exceto o necessário para concluir a compra (por exemplo, a conversa no WhatsApp com a loja).</p>
+    <p>Conforme a LGPD (Lei nº 13.709/2018), você pode solicitar a qualquer momento o acesso, a correção ou a exclusão dos seus dados pelo canal de atendimento {{ store.phone|default:"da loja" }}.</p>
+  </div>
+</div>
+{% endblock %}
